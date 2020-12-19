@@ -1,0 +1,28 @@
+program,vecident,ident,printable,declist,decllistsimple,declaration,type,structdecl,structname,cmpdstmt,stmtlist,stmt,simplstmt,assignstmt,expression,term,factor,iostmt,structstmt,ifstmt,whilestmt,forstmt,condition,relation
+13,8,14,401,4,5,402,10,11,12,41,401,17,18,32,33,2,3,37,39,40,15,16,19,21,6,7,20,22,24,23,26,28,25,42,29,27
+program
+program = 13 declist 8 cmpdstmt 14
+vecident = 401 | 401 4 402 5
+ident = vecident | vecident 10 ident
+printable = ident | 402
+declist = structdecl decllistsimple 8 | decllistsimple 8
+decllistsimple = declaration | declaration 8 decllist
+declaration = type vecident
+type = 11 | 12 | structname
+structdecl = 41 structname 6 decllist 7
+structname = 401
+cmpdstmt = stmtlist 17 expression 8
+stmtlist = stmt 8 | stmt 8 stmtlist
+stmt = simplstmt | structstmt
+simplstmt = assignstmt | iostmt
+assignstmt = ident 18 expression
+expression = term 32 expression | term 33 expression | term
+term = factor 2 term | factor 3 term | factor 37 term | factor
+factor = 39 expression 40 | ident | 402
+iostmt = 15 ident | 16 printable
+structstmt = ifstmt | whilestmt | forstmt
+ifstmt = 19 39 condition 40 21 6 stmt 7 | 19 39 condition 40 21 6 stmt 7 20 6 stmt 7
+whilestmt = 22 39 condition 40 24 6 stmt 7
+forstmt = 23 39 ident 8 condition 8 assignstmt 40 24 6 stmt 7
+condition = expression relation expression
+relation = 26 | 28 | 25 | 42 | 29 | 27
