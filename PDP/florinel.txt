@@ -1,0 +1,213 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+
+namespace Lab3PDP
+{
+    class Program
+    {
+        static void matrixInit(ref int[,] A, ref int[,] B, int m, int n)
+        {
+            Random r = new Random();
+            for (int i = 0; i < m; i++)
+                for (int j = 0; j < n; j++) {
+                    A[i, j] = r.Next(10);
+                    B[j, i] = r.Next(10);
+                }
+        }
+
+        static void printMatrix(int[,] matrix, int rows, int cols)
+        {
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                    Console.Write(matrix[i, j] + " ");
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+        }
+
+        static int computeElement(ref int[,] A, ref int[,] B, int row, int col, int n)
+        {
+            int res = 0;
+            for (int index = 0; index < n; index++)
+            {
+                res += A[row, index] * B[index, col];
+            }
+            return res;
+        }
+
+        static void computeMultipleElements1(ref int[,] A, ref int[,] B, ref int[,] R, 
+            int startRow, int endRow, int m, int n)
+        {
+            for (int row = startRow; row <= endRow; row++)
+            {
+                for (int col = 0; col < m; col++)
+                {
+                    R[row, col] = computeElement(ref A, ref B, row, col, n);
+                }
+            }
+        }
+
+        static void computeMultipleElements2(ref int[,] A, ref int[,] B, ref int[,] R,
+            int startCol,int endCol, int m, int n)
+        {
+            for (int col = startCol; col <= endCol; col++)
+            {
+                for (int row = 0; row < m; row++)
+                {
+                    R[row, col] = computeElement(ref A, ref B, row, col, n);
+                }
+            }
+        }
+
+        static void computeMultipleElements3(ref int[,] A, ref int[,] B, ref int[,] R, 
+                int index, int tasks, int m, int n)
+        {
+            int count = index - 1;
+            for(int row = 0; row < m; row++)
+                for(int col = 0; col < m; col++)
+                {
+                    if (count == 0) {
+                        R[row, col] = computeElement(ref A, ref B, row, col, n);
+                    }
+                    else
+                        count = (count + 1) % tasks;
+                }
+        }
+
+        
+        static void Main(string[] args)
+        {
+            int m = 4;
+            int n = 3;
+            int[,] A = new int[m, n];
+            int[,] B = new int[n, m];
+            int[,] R = new int[m, m];
+            matrixInit(ref A, ref B,m,n);
+            printMatrix(A,m,n);
+            printMatrix(B,n,m);
+
+            //Version 1 - Threads
+            R = new int[m, m];
+            Thread t1v1 = new Thread(() =>
+                    computeMultipleElements1(ref A, ref B, ref R, 0, m / 4 - 1, m, n));
+            t1v1.Start();
+            Thread t2v1 = new Thread(() =>
+                    computeMultipleElements1(ref A, ref B, ref R, m / 4, 2 * (m / 4) - 1, m, n));
+            t2v1.Start();
+            Thread t3v1 = new Thread(() =>
+                    computeMultipleElements1(ref A, ref B, ref R, 2 * (m / 4), 3 * (m / 4) - 1, m, n));
+            t3v1.Start();
+            Thread t4v1 = new Thread(() =>
+                    computeMultipleElements1(ref A, ref B, ref R, 3 * (m / 4), m - 1, m, n));
+            t4v1.Start();
+            
+
+            t1v1.Join();
+            t2v1.Join();
+            t3v1.Join();
+            t4v1.Join();
+
+            Console.Write("Consecutive elements by row - Threads\n");
+            printMatrix(R,m,m);
+
+            //Version 2 - Threads
+            R = new int[m, m];
+            Thread t1v2 = new Thread(() =>
+                    computeMultipleElements2(ref A, ref B, ref R, 0, n / 4 - 1, m, n));
+            t1v2.Start();
+            Thread t2v2 = new Thread(() =>
+                    computeMultipleElements2(ref A, ref B, ref R, n / 4, 2 * (n / 4) - 1, m, n));
+            t2v2.Start();
+            Thread t3v2 = new Thread(() =>
+                    computeMultipleElements2(ref A, ref B, ref R, 2 * (n / 4), 3 * (n / 4) - 1, m, n));
+            t3v2.Start();
+            Thread t4v2 = new Thread(() =>
+                    computeMultipleElements2(ref A, ref B, ref R, 3 * (n / 4), m - 1, m, n));
+            t4v2.Start();
+
+            t1v2.Join();
+            t2v2.Join();
+            t3v2.Join();
+            t4v2.Join();
+
+            Console.Write("Consecutive elements by column - Threads\n");
+            printMatrix(R,m,m);
+
+            //Version 3 - Threads
+            R = new int[m, m];
+            Thread t1v3 = new Thread(() =>
+                    computeMultipleElements3(ref A, ref B, ref R, 1, 4, m, n));
+            t1v3.Start();
+            Thread t2v3 = new Thread(() =>
+                    computeMultipleElements3(ref A, ref B, ref R, 2, 4, m, n));
+            t2v3.Start();
+            Thread t3v3 = new Thread(() =>
+                    computeMultipleElements3(ref A, ref B, ref R, 3, 4, m, n));
+            t3v3.Start();
+            Thread t4v3 = new Thread(() =>
+                    computeMultipleElements3(ref A, ref B, ref R, 4, 4, m, n));
+            t4v3.Start();
+
+            t1v3.Join();
+            t2v3.Join();
+            t3v3.Join();
+            t4v3.Join();
+
+            Console.Write("Every k elements (k = 4) - Threads\n");
+            printMatrix(R,m,m);
+
+           // ThreadPool.SetMaxThreads(3,3);
+
+            //Version 1 - ThreadPool
+            R = new int[m, m];
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements1(ref A, ref B, ref R, 0, m / 4 - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements1(ref A, ref B, ref R, m / 4, 2 * (m / 4) - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements1(ref A, ref B, ref R, 2 * (m / 4), 3 * (m / 4) - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements1(ref A, ref B, ref R, 3 * (m / 4), m - 1, m, n)));
+            Thread.Sleep(1000);
+
+            Console.Write("Consecutive elements by row - ThreadPool\n");
+            printMatrix(R,m,m);
+
+            //Version 2 - ThreadPool
+            R = new int[m, m];
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements2(ref A, ref B, ref R, 0, n / 4 - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements2(ref A, ref B, ref R, n / 4, 2 * (n / 4) - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements2(ref A, ref B, ref R, 2 * (n / 4), 3 * (n / 4) - 1, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements2(ref A, ref B, ref R, 3 * (n / 4), m - 1, m, n)));
+            Thread.Sleep(1000);
+
+            Console.Write("Consecutive elements by column - ThreadPool\n");
+            printMatrix(R,m,m);
+
+            //Version 3 - ThreadPool
+            R = new int[m, m];
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements3(ref A, ref B, ref R, 1, 4, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements3(ref A, ref B, ref R, 2, 4, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements3(ref A, ref B, ref R, 3, 4, m, n)));
+            ThreadPool.QueueUserWorkItem(new WaitCallback(state =>
+                    computeMultipleElements3(ref A, ref B, ref R, 4, 4, m, n)));
+            Thread.Sleep(1000);
+
+            Console.Write("Every k elements (k=4) - ThreadPool\n");
+            printMatrix(R,m,m);
+
+        }
+    }
+}
